@@ -1,10 +1,17 @@
-# SMART-FRIDGE
-###(C) Kreative Köpfe 
+# SMART-FRIDGE - _Kreative Köpfe_ 
 
-
-# SSH Verbindung
-## Server Seite (Raspberry PI)
-### Step 1 SSH Server aktivieren
+__SMART-FRIDGE__ macht jeden Kühlschrank smart. __SMART-FRIDGE__ unterstützt deine
+Nachhaltigkeit, indem es die Lebensmittel in deinem Kühlschrank verwaltet und einen
+Alarm auslöst, wenn das MHD (Mindest-Haltbarkeits-Datum) erreicht wird. 
+Mit einer Kamera können Artikel einfach erfasst werden, dazu ist ein EAN-Code Scanner
+in der App integriert, dieser ermöglicht das Erfassen der Artikel. Daten für bereits
+bekannte Lebensmittel werden automatisch bei Einbuchen von Artikel ausgefüllt.
+___
+## Technisches
+___
+### SSH Verbindung
+### Server Seite (Raspberry PI)
+#### Step 1 SSH Server aktivieren
 
 Auf dem Raspberry PI ein Terminal öffnen und die Konfiguration öffnen:
 
@@ -20,8 +27,8 @@ Anschliessend die Konfiguration mit __Finish__ schliessen.
 Nun ist erst die Clientseite für die Verbindung einzurichten.
 
 
-## Client Seite (Windows, macOS, ...)
-### Step 1 __Schlüsselpaar erzeugen__
+### Client Seite (Windows, macOS, ...)
+#### Step 1 __Schlüsselpaar erzeugen__
 
 Mit ssh-keygen aus der Kommandozeile ein neues Schlüsselpaar erstellen.
 ```bash
@@ -40,7 +47,7 @@ Schritt auf den Server kopiert werden.
 Der Server erwartet den öffentlichen Schlüssel eines Benutzers in der 
 Datei ~/.ssh/authorized_keys.
 
-### Step 2 Public Key auf den Raspberry PI kopieren
+#### Step 2 Public Key auf den Raspberry PI kopieren
 
 Mit SCP ist der Public Key auf den Raspberry Pi zu kopieren.
 
@@ -48,7 +55,7 @@ Mit SCP ist der Public Key auf den Raspberry Pi zu kopieren.
 scp </USER-HOME>/.ssh/id_rsa.pub pi@SERVER:/home/pi/.ssh/
 ````
 
-### Step 3 
+#### Step 3 
 
 SSH Config Datei anpasssen. Die Datei </USER-HOME>/.ssh/config
 öffnen, wenn sie nicht existiert eine neue Datei anlegen.
@@ -56,7 +63,7 @@ In die config Datei die folgenden Einträge einfügen.
 
 ```sh
 Host raspi
-    HostName 192.168.178.47
+    HostName <RASPBERRY IP>
     IdentityFile ~/.ssh/id_rsa
     User pi
     StrictHostKeyChecking accept-new
@@ -64,7 +71,7 @@ Host raspi
     ServerAliveCountMax 5
 ```
 
-## Server Seite (Raspberry PI)
+### Server Seite (Raspberry PI)
 
 Der kopierte Public Key wird mit der folgenden Anweisung in die 
 Datei __authorized_keys__ kopiert. 
@@ -74,7 +81,7 @@ cat id_rsa.pub >> /home/pi/.ssh/authorized_keys
 ```
 Die Datei __id_rsa.pub__ kann jetzt gelöscht werden. 
 
-## Verbindungs Test
+### Verbindungs Test
 
 Im Terminal den folgenden Befehl eingeben:
 
