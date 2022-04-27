@@ -13,6 +13,7 @@ if os.environ.get('DISPLAY', '') == '':
 
 
 class EanScanner:
+
     def __init__(self, root, window_title="EAN Scanner", video_source=0):
 
         self.root = root
@@ -20,6 +21,7 @@ class EanScanner:
         screenwidth = self.root.winfo_screenwidth()
         screenheight = self.root.winfo_screenheight()
         alignstr = f'{wnd_width}x{wnd_height}+{(screenwidth - wnd_width) // 2}+{(screenheight - wnd_height) // 2}'
+
         self.root.geometry(alignstr)
         self.root.resizable(width=False, height=False)
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
@@ -30,7 +32,6 @@ class EanScanner:
         self.video_source = video_source
 
         self.video = VideoCapture(self.video_source)
-
         self.canvas = tk.Canvas(root, width=self.video.width, height=self.video.height)
         self.canvas.place(x=390, y=10, width=400, height=300)
 
@@ -86,31 +87,44 @@ class EanScanner:
     def update(self):
         if self.is_active:
             succes, frame = self.video.get_frame()
-
             if succes:
                 for barcode in decode(frame):
                     barcode_data = barcode.data.decode('utf-8')
-                    print(barcode_data)
-                    self.txt_ean.delete(0, tk.END)
-                    self.txt_ean.insert(0, barcode_data)
-                    # pts = np.array([barcode.polygon], np.int32)
-                    # pts = pts.reshape((-1, 1, 2))
-                    # cv2.polylines(frame, [pts], True, (255, 0, 255), 5)
-                    pts2 = barcode.rect
-                    cv2.putText(frame, barcode_data,
-                                (pts2[0], pts2[1]),
-                                cv2.FONT_HERSHEY_SIMPLEX, 1,
-                                (255, 0, 255), 2)
+                    if self.is_valid_ean(barcode_data):
+                        print(barcode_data)
+                        self.txt_ean.delete(0, tk.END)
+                        self.txt_ean.insert(0, barcode_data)
+                        cv2.putText(frame, barcode_data,
+                                    (70, 30),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 1,
+                                    (55, 255, 55), 2)
 
                 self.photo = ImageTk.PhotoImage(image=Image.fromarray(frame))
                 self.canvas.create_image(0, 0, image=self.photo, anchor=tk.NW)
 
             self.root.after(self.delay, self.update)
 
+    def is_valid_ean(self, barcode_data):
+        if len(barcode_data) == 13:
+            sum = 0
+            for i, chr in enumerate(barcode_data[:12]):
+                digit = ord(chr) - 48
+                sum += digit
+                if i % 2:
+                    sum += digit * 2
+            checksum = (10 - sum % 10) % 10
+            return checksum == ord(barcode_data[-1])-48
+
+        return False
+
 
 class VideoCapture:
     def __init__(self, video_source=0):
         self.video = cv2.VideoCapture(video_source)
+
+        self.video.set(cv2.CAP_PROP_FRAME_WIDTH, 400)
+        self.video.set(cv2.CAP_PROP_FRAME_HEIGHT, 300)
+
         if not self.video.isOpened():
             raise ValueError("Unable to open video source", video_source)
 
