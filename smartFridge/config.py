@@ -1,5 +1,5 @@
 wnd_width = 800
-wnd_height = 600
+wnd_height = 480
 
 btn_height = 44
 lab_height = 20

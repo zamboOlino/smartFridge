@@ -5,6 +5,7 @@ import os
 from PIL import Image, ImageTk
 from pyzbar.pyzbar import decode
 from config import *
+from smartFridge.database import Database
 from smartFridge.vkeyboard import VKeyboard
 
 if os.environ.get('DISPLAY', '') == '':
@@ -16,8 +17,12 @@ class EanScanner:
 
     def __init__(self, root, window_title="EAN Scanner", video_source=0):
 
+        self.db = Database()
+
         self.root = root
         self.root.title(window_title)
+        self.root.wm_attributes('-fullscreen', 'True')
+
         screenwidth = self.root.winfo_screenwidth()
         screenheight = self.root.winfo_screenheight()
         alignstr = f'{wnd_width}x{wnd_height}+{(screenwidth - wnd_width) // 2}+{(screenheight - wnd_height) // 2}'
@@ -55,11 +60,11 @@ class EanScanner:
 
         self.btn_home = tk.Button(self.root, text="Home", font=ft_times_14, bg=btn_bg_color, fg=btn_fg_color,
                                   anchor=tk.W, command=self.on_click_home)
-        self.btn_home.place(x=10, y=540, width=100, height=btn_height)
+        self.btn_home.place(x=10, y=420, width=100, height=btn_height)
 
         self.btn_enter = tk.Button(self.root, text="Eingabe", font=ft_times_14, bg=btn_bg_color, fg=btn_fg_color,
                                    anchor=tk.E, command=self.on_click_enter)
-        self.btn_enter.place(x=120, y=540, width=100, height=btn_height)
+        self.btn_enter.place(x=120, y=420, width=100, height=btn_height)
 
         self.is_active = True
 
