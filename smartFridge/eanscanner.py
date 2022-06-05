@@ -1,7 +1,9 @@
+import datetime
 import tkinter as tk
 import tkinter.font as tkfont
 import cv2
 import os
+from tkinter import messagebox
 from PIL import Image, ImageTk
 from pyzbar.pyzbar import decode
 from config import *
@@ -60,11 +62,11 @@ class EanScanner:
 
         self.btn_home = tk.Button(self.root, text="Home", font=ft_times_14, bg=btn_bg_color, fg=btn_fg_color,
                                   anchor=tk.W, command=self.on_click_home)
-        self.btn_home.place(x=10, y=420, width=100, height=btn_height)
+        self.btn_home.place(x=10, y=420, width=150, height=btn_height)
 
-        self.btn_enter = tk.Button(self.root, text="Eingabe", font=ft_times_14, bg=btn_bg_color, fg=btn_fg_color,
-                                   anchor=tk.E, command=self.on_click_enter)
-        self.btn_enter.place(x=120, y=420, width=100, height=btn_height)
+        self.btn_enter = tk.Button(self.root, text="Hinzufügen", font=ft_times_14, bg=btn_bg_color, fg=btn_fg_color,
+                                   anchor=tk.W, command=self.on_click_enter)
+        self.btn_enter.place(x=170, y=420, width=150, height=btn_height)
 
         self.is_active = True
 
@@ -87,7 +89,20 @@ class EanScanner:
         self.on_closing()
 
     def on_click_enter(self):
-        print("Enter")
+        ean = self.txt_ean.get()
+        mhd = self.txt_mhd.get()
+        if self.is_valid_ean(ean) and self.is_valid_mhd(mhd):
+            db = Database()
+            article = self.txt_article.get()
+            note = ""
+            mhd = self.txt_mhd.get()
+            db.insert(ean, article, note, mhd)
+            del db
+        else:
+            if not self.is_valid_ean(ean):
+                messagebox.showinfo(parent=self.root, message="Ungültiger EAN-Code.")
+            if not self.is_valid_mhd(mhd):
+                messagebox.showinfo(parent=self.root, message="Ungültiges MHD. <TT.MM.JJJJ>")
 
     def update(self):
         if self.is_active:
@@ -118,9 +133,19 @@ class EanScanner:
                 if i % 2:
                     sum += digit * 2
             checksum = (10 - sum % 10) % 10
-            return checksum == ord(barcode_data[-1])-48
-
+            return checksum == ord(barcode_data[-1]) - 48
         return False
+
+    def is_valid_mhd(self, mhd):
+        day, month, year = 0, 0, 0
+        if len(mhd) == 10:
+            if mhd.count(".") == 2:
+                day, month, year = mhd.split(".")
+        try:
+            datetime.date(int(year), int(month), int(day))
+            return True;
+        except ValueError:
+            return False
 
 
 class VideoCapture:
@@ -129,7 +154,7 @@ class VideoCapture:
 
         self.video.set(cv2.CAP_PROP_FRAME_WIDTH, 400)
         self.video.set(cv2.CAP_PROP_FRAME_HEIGHT, 300)
-
+        self.video.set(cv2.CAP_PROP_FOCUS, 10)
         if not self.video.isOpened():
             raise ValueError("Unable to open video source", video_source)
 
@@ -141,6 +166,7 @@ class VideoCapture:
             success, frame = self.video.read()
 
             if success:
+                # frame = cv2.resize(frame, (0, 0), fx=3.0, fy=3.0, interpolation=cv2.INTER_NEAREST)
                 return (success, cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
             else:
                 return (success, None)

@@ -52,7 +52,7 @@ class VKeyboardView(Toplevel):
     def _attach_key_press(self, k):
         if k == '[ ENTER ]':
             self.destroy()
-        elif k == '[ space ]':
+        elif k == '[ SPACE ]':
             self.entry.insert(END, ' ')
         elif k == '<x':
             self.entry.delete(len(self.entry.get()) - 1, END)

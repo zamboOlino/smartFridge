@@ -1,9 +1,13 @@
+import datetime
 import os
 import tkinter as tk
 import tkinter.font as tkfont
+from datetime import date
 from tkinter import ttk
+from tkinter import messagebox
 from config import *
 from eanscanner import EanScanner
+from smartFridge.database import Database
 
 
 class App:
@@ -36,25 +40,27 @@ class App:
         lab_mhd_criticle_title = tk.Label(window, text="MHD Kritisch", font=ft_times_20, fg=lab_fg_color, anchor=tk.W)
         lab_mhd_criticle_title.place(x=270, y=20, width=250, height=30)
 
-        lst_mhd_criticle = ttk.Treeview(window, columns=("ean", "article", "mhd"), show="headings", height=5)
-        lst_mhd_criticle.place(x=270, y=50, width=506, height=153)
-        lst_mhd_criticle.column("ean", minwidth=0, width=120, stretch=False, anchor="w")
-        lst_mhd_criticle.heading("ean", text="EAN")
-        lst_mhd_criticle.column("article", minwidth=0, width=300, stretch=False, anchor="w")
-        lst_mhd_criticle.heading("article", text="Artikel")
-        lst_mhd_criticle.column("mhd", minwidth=0, width=100, stretch=False, anchor="e")
-        lst_mhd_criticle.heading("mhd", text="MHD")
+        self.lst_mhd_criticle = ttk.Treeview(window, columns=("ean", "article", "mhd"), show="headings", height=5)
+        self.lst_mhd_criticle.place(x=270, y=50, width=506, height=153)
+        self.lst_mhd_criticle.column("ean", minwidth=0, width=120, stretch=False, anchor="w")
+        self.lst_mhd_criticle.heading("ean", text="EAN")
+        self.lst_mhd_criticle.column("article", minwidth=0, width=290, stretch=False, anchor="w")
+        self.lst_mhd_criticle.heading("article", text="Artikel")
+        self.lst_mhd_criticle.column("mhd", minwidth=0, width=100, stretch=False, anchor="e")
+        self.lst_mhd_criticle.heading("mhd", text="MHD")
+        self.lst_mhd_criticle.bind('<1>', self.on_lst_mhd_criticle_clicked)
 
-        lab_fridge_title = tk.Label(window, text="Kühlschrank", font=ft_times_20, fg=lab_fg_color, anchor="w")
-        lab_fridge_title.place(x=270, y=220, width=250, height=30)
-        lst_fridge = ttk.Treeview(window, columns=("ean", "article", "mhd"), show="headings", height=5)
-        lst_fridge.place(x=270, y=250, width=511, height=330)
-        lst_fridge.column("ean", minwidth=0, width=120, stretch=False, anchor="w")
-        lst_fridge.heading("ean", text="EAN")
-        lst_fridge.column("article", minwidth=0, width=300, stretch=False, anchor="w")
-        lst_fridge.heading("article", text="Artikel")
-        lst_fridge.column("mhd", minwidth=0, width=100, stretch=False, anchor="e")
-        lst_fridge.heading("mhd", text="MHD")
+        self.lab_fridge_title = tk.Label(window, text="Kühlschrank", font=ft_times_20, fg=lab_fg_color, anchor="w")
+        self.lab_fridge_title.place(x=270, y=220, width=250, height=30)
+        self.lst_fridge = ttk.Treeview(window, columns=("ean", "article", "mhd"), show="headings", height=5)
+        self.lst_fridge.place(x=270, y=250, width=511, height=330)
+        self.lst_fridge.column("ean", minwidth=0, width=120, stretch=False, anchor="w")
+        self.lst_fridge.heading("ean", text="EAN")
+        self.lst_fridge.column("article", minwidth=0, width=290, stretch=False, anchor="w")
+        self.lst_fridge.heading("article", text="Artikel")
+        self.lst_fridge.column("mhd", minwidth=0, width=100, stretch=False, anchor="e")
+        self.lst_fridge.heading("mhd", text="MHD")
+        self.lst_fridge.bind('<1>', self.on_lst_fridge_clicked)
 
         btn_home = tk.Button(window, text="Home", font=ft_times_14, bg=btn_bg_color, fg=btn_fg_color,
                              anchor=tk.W, command=self.on_click_home)
@@ -73,6 +79,30 @@ class App:
                                    anchor=tk.W, command=self.on_click_statistic)
         btn_statistics.place(x=20, y=400, width=220, height=44)
 
+        self.window.bind('<FocusIn>', self.on_form_event)
+
+    def on_lst_fridge_clicked(self, event):
+        item = self.lst_fridge.identify('item', event.x, event.y)
+        result = messagebox.askyesno(message="Artikel löschen")
+        if result:
+            db = Database()
+            db.remove(item)
+            del db
+            self.fill_lst_fridge()
+
+    def on_lst_mhd_criticle_clicked(self, event):
+        item = self.lst_mhd_criticle.identify('item', event.x, event.y)
+        result = messagebox.askyesno(message="Artikel löschen")
+        if result:
+            db = Database()
+            db.remove(item)
+            del db
+            self.fill_lst_mhd_criticle()
+
+    def on_form_event(self, event):
+        self.fill_lst_fridge()
+        self.fill_lst_mhd_criticle()
+
     def on_click_home(self):
         print("home")
 
@@ -85,6 +115,43 @@ class App:
 
     def on_click_statistic(self):
         print("statistic")
+
+    def fill_lst_fridge(self):
+
+        for item in self.lst_fridge.get_children():
+            self.lst_fridge.delete(item)
+        db = Database()
+        articles = db.find_all()
+        for article in articles:
+            id = article[0]
+            ean = article[1]
+            article_name = article[2]
+            mhd = article[4]
+            self.lst_fridge.insert("", "end",
+                                   iid=str(id),
+                                   values=(ean, article_name, mhd))
+        del db
+
+    def fill_lst_mhd_criticle(self):
+        for item in self.lst_mhd_criticle.get_children():
+            print(item)
+            self.lst_mhd_criticle.delete(item)
+        db = Database()
+        articles = db.find_all()
+        self.lst_fridge.delete()
+        for article in articles:
+            id = article[0]
+            ean = article[1]
+            article_name = article[2]
+            mhd = article[4]
+            day, month, year = [int(token) for token in mhd.split(".")]
+            mhd_date = datetime.date(year, month - 1, day) - datetime.timedelta(2)
+            today = date.today()
+            if today > mhd_date:
+                self.lst_mhd_criticle.insert("", "end",
+                                             iid=str(id),
+                                             values=(ean, article_name, mhd))
+        del db
 
 
 if __name__ == "__main__":

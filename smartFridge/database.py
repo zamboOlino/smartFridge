@@ -51,6 +51,7 @@ if __name__ == '__main__':
 
     for record in db.find_all():
         print(record)
+        print(record[0])
         db.remove(record[0])
 
     del db
