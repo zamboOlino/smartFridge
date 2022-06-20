@@ -95,4 +95,3 @@ zum Raspberry PI.
 ```sh
 pi@raspberrypi:~ $
 ```
-

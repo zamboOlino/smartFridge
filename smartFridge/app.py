@@ -7,7 +7,7 @@ from tkinter import ttk
 from tkinter import messagebox
 from config import *
 from eanscanner import EanScanner
-from smartFridge.database import Database
+from database import Database
 
 
 class App:

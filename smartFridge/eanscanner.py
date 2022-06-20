@@ -1,4 +1,5 @@
 import datetime
+import time
 import tkinter as tk
 import tkinter.font as tkfont
 import cv2
@@ -6,9 +7,10 @@ import os
 from tkinter import messagebox
 from PIL import Image, ImageTk
 from pyzbar.pyzbar import decode
+
 from config import *
-from smartFridge.database import Database
-from smartFridge.vkeyboard import VKeyboard
+from database import Database
+from vkeyboard import VKeyboard
 
 if os.environ.get('DISPLAY', '') == '':
     print('no display found. Using :0.0')
@@ -98,6 +100,9 @@ class EanScanner:
             mhd = self.txt_mhd.get()
             db.insert(ean, article, note, mhd)
             del db
+            self.txt_ean.delete(0, tk.END)
+            self.txt_mhd.delete(0, tk.END)
+            self.on_closing()
         else:
             if not self.is_valid_ean(ean):
                 messagebox.showinfo(parent=self.root, message="Ungültiger EAN-Code.")
@@ -109,6 +114,7 @@ class EanScanner:
             succes, frame = self.video.get_frame()
             if succes:
                 for barcode in decode(frame):
+                    print(barcode)
                     barcode_data = barcode.data.decode('utf-8')
                     if self.is_valid_ean(barcode_data):
                         print(barcode_data)
@@ -118,6 +124,11 @@ class EanScanner:
                                     (70, 30),
                                     cv2.FONT_HERSHEY_SIMPLEX, 1,
                                     (55, 255, 55), 2)
+                        db = Database()
+                        article = db.find_by_ean(barcode_data)
+                        if article:
+                            self.txt_article.delete(0, tk.END)
+                            self.txt_article.insert(0, article[0][2])
 
                 self.photo = ImageTk.PhotoImage(image=Image.fromarray(frame))
                 self.canvas.create_image(0, 0, image=self.photo, anchor=tk.NW)
@@ -152,9 +163,9 @@ class VideoCapture:
     def __init__(self, video_source=0):
         self.video = cv2.VideoCapture(video_source)
 
-        self.video.set(cv2.CAP_PROP_FRAME_WIDTH, 400)
-        self.video.set(cv2.CAP_PROP_FRAME_HEIGHT, 300)
-        self.video.set(cv2.CAP_PROP_FOCUS, 10)
+        self.video.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        self.video.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+        self.video.set(cv2.CAP_PROP_AUTOFOCUS, 1)
         if not self.video.isOpened():
             raise ValueError("Unable to open video source", video_source)
 
